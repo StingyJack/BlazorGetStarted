@@ -1,0 +1,86 @@
+﻿@using System.Security
+@using NetFxControllers
+@page "/login"
+<style>
+    .boxsizingBorder {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+</style>
+<h1>Login</h1>
+<div class="row">
+    <div class="col-md-12">
+        <label class="@MessageClass">@MessageText</label>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="row">
+            <div class="col-md-10 offset-1 form-control">
+                <label>User Name:</label>
+                <input id="UserName" type="text" value=@UserName />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-10 offset-1 form-control">
+                <label>Password:</label>
+                <input id="Password" type="password" value=@Password />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-2 offset-6 ">
+                <button class="btn btn-primary" onclick="@AttemptLogin">Login</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8 offset-2">
+        <textarea readonly="readonly" class="boxsizingBorder w-100">@DebugLog</textarea>
+    </div>
+</div>
+
+@functions{
+
+    public string UserName { get; set; }
+    public string Password { get; set; }
+    public string MessageText { get; set; }
+    public string MessageClass { get; set; } = "text-hide";
+    public string DebugLog { get; set; }
+
+    void AttemptLogin()
+    {
+        AddDebugLog("Starting auth attempt");
+        var ctrl = new AuthController();
+        try
+        {
+            AddDebugLog("controller made, calling controller method");
+            var result = ctrl.AttemptUserAuth(UserName, Password);
+            AddDebugLog($"controller result received {result}");
+            if (result.IsAuthed)
+            {
+                AddDebugLog("Auth success");
+                MessageText = $"Login OK! ticket: {result.UserTicket}";
+                MessageClass = "text-success";
+            }
+            else
+            {
+                AddDebugLog($"Auth returned false. Error: {result.ErrorMessage}");
+                throw new SecurityException($"Login failed to complete");
+            }
+        }
+        catch (Exception e)
+        {
+            AddDebugLog($"Auth had exception {e}");
+            MessageText = e.Message;
+            MessageClass = "text-danger";
+        }
+
+    }
+
+    void AddDebugLog(string message)
+    {
+        DebugLog = $"{DateTime.Now:HH:mm:ss.fff} - {message}{Environment.NewLine}{DebugLog}";
+    }
+}
